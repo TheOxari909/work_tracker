@@ -1,13 +1,21 @@
-import React from 'react';
 import * as Helper from '@/utils/helpers';
 import * as Db from '@/utils/db';
+import { type WorkEntry, type FormData } from '@/types/types';
 
-const Logs = ({ entries, totalTime, onDelete, period, onEdit }) => {
-  const date = new Date(period.period);
+interface LogsProp {
+  entries: WorkEntry[];
+  totalTime: number;
+  onDelete: (id: string) => void;
+  formData: FormData;
+  onEdit: (selectedEntry: WorkEntry) => void;
+}
+
+const Logs = ({ entries, totalTime, onDelete, formData, onEdit }: LogsProp) => {
+  const date = new Date(formData.period);
   const month = Helper.capitalizeFirstLetter(
     date.toLocaleString('default', { month: 'long' })
   );
-  const year = period.period.split('-');
+  const year = formData.period.split('-');
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
@@ -26,7 +34,7 @@ const Logs = ({ entries, totalTime, onDelete, period, onEdit }) => {
         <div className="col-span-2 text-right">Toiminnot</div>
       </div>
       <div className="divide-y max-h-64 lg:max-h-100 overflow-y-auto divide-slate-100">
-        {entries.map((e) => (
+        {entries.map((e: WorkEntry) => (
           <LogItem key={e.id} entry={e} onDelete={onDelete} onEdit={onEdit} />
         ))}
       </div>
@@ -34,9 +42,15 @@ const Logs = ({ entries, totalTime, onDelete, period, onEdit }) => {
   );
 };
 
-const LogItem = ({ entry, onDelete, onEdit }) => {
-  const handleDelete = async (id) => {
-    event.preventDefault();
+interface LogItemProps {
+  entry: WorkEntry;
+  onDelete: (id: string) => void;
+  onEdit: (entry: WorkEntry) => void;
+}
+
+const LogItem = ({ entry, onDelete, onEdit }: LogItemProps) => {
+  const handleDelete = async (id: string) => {
+    if (event) event.preventDefault();
     try {
       Db.handleDelete(id);
       onDelete(id);
@@ -53,7 +67,7 @@ const LogItem = ({ entry, onDelete, onEdit }) => {
             {Helper.getDay(entry.date)}
           </span>
           <span className="text-slate-400 text-sm ml-2">
-            (Vk {Helper.getWeekNumber(new Date(entry.date))})
+            (Vk {Helper.getWeekNumber(entry.date)})
           </span>
         </div>
       </div>

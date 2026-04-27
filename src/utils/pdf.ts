@@ -1,7 +1,8 @@
-import { PDFDocument, StandardFonts } from 'pdf-lib';
+import { PDFDocument } from 'pdf-lib';
+import { type WorkEntry, type FormData } from '@/types/types';
 import * as Helper from '@/utils/helpers';
 
-const generatePdf = async (formData, periodData) => {
+const generatePdf = async (formData: FormData, periodData: WorkEntry[]) => {
   const existingPdfBytes = await fetch('/tunnit.pdf').then((res) =>
     res.arrayBuffer()
   );
@@ -20,12 +21,12 @@ const generatePdf = async (formData, periodData) => {
   const maxWidth = 174;
   const lineHeight = 8;
 
-  periodData.forEach((log, index) => {
-    const y = startY - index * rowStep;
-    const week = Helper.getWeekNumber(new Date(log.date)).toString();
+  periodData.forEach((log: WorkEntry, index: number) => {
+    const y: number = startY - index * rowStep;
+    const week = Helper.getWeekNumber(log.date).toString();
     const date = Helper.getDay(log.date);
     const time = log.start + ' - ' + log.end;
-    const hours = (log.minutes / 60).toFixed(2);
+    const hours: string = (log.minutes / 60).toFixed(2);
     page.drawText(week, { x: 60, y, size: 12, font });
     page.drawText(date, { x: 118, y, size: 12, font });
     page.drawText(time, { x: 188, y, size: 12, font });
@@ -40,10 +41,10 @@ const generatePdf = async (formData, periodData) => {
       let secondLine = '';
       let firstLineFull = false;
 
-      words.forEach((word) => {
+      words.forEach((word: String) => {
         if (
           !firstLineFull &&
-          font.widthOfTextAtSize(firstLine + word, 8) < maxWidth
+          font.widthOfTextAtSize(firstLine + word, lineHeight) < maxWidth
         ) {
           firstLine += word + ' ';
         } else {
@@ -67,7 +68,7 @@ const generatePdf = async (formData, periodData) => {
   const pdfData = await pdfDoc.save();
   const link = document.createElement('a');
   link.href = URL.createObjectURL(
-    new Blob([pdfData], { type: 'application/pdf' })
+    new Blob([new Uint8Array(pdfData)], { type: 'application/pdf' })
   );
   // link.download = `Tunnit_${month}_${year}.pdf`;
   link.target = '_blank';

@@ -1,19 +1,26 @@
-import React from 'react';
 import * as Helper from '@/utils/helpers';
+import { type WorkEntry } from '@/types/types';
 
-export const Header = (company) => {
+interface HeaderProps {
+  company: string;
+}
+
+export const Header = ({ company }: HeaderProps) => {
   return (
     <header className="bg-white border-b sticky top-0 z-20 px-4 py-4 lg:px-8">
       <div className="max-w-7xl mx-auto flex justify-between items-center">
-        <h1 className="text-xl font-bold text-blue-600">
-          {company.company} Tunnit
-        </h1>
+        <h1 className="text-xl font-bold text-blue-600">{company} Tunnit</h1>
       </div>
     </header>
   );
 };
 
-export const OverView = ({ totalTime, entries }) => {
+interface OverViewProps {
+  totalTime: number; // Use whatever type matches your logic
+  entries: WorkEntry[];
+}
+
+export const OverView = ({ totalTime, entries }: OverViewProps) => {
   return (
     <div className="hidden lg:grid grid-cols-3 gap-4">
       <div className="bg-white border rounded-xl p-5 shadow-sm">
