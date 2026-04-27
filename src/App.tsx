@@ -1,15 +1,14 @@
 import './App.css';
-import { React, useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Basics from '@/components/Basics';
 import Logs from '@/components/Logs';
 import NewLog from '@/components/NewLog';
 import generatePdf from '@/utils/pdf';
 import { Header, OverView } from '@/components/Overview';
-import * as Helper from '@/utils/helpers';
-import { signInWithEmailAndPassword } from 'firebase/auth';
 import { db, auth } from './firebase';
-import { collection, getDocs, getDoc, doc } from 'firebase/firestore';
+import { getDoc, doc } from 'firebase/firestore';
 import * as Db from '@/utils/db';
+import { type WorkEntry } from '@/types/types';
 
 const App = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -22,25 +21,27 @@ const App = () => {
     period: new Date().toISOString().slice(0, 7), // Default to "2026-04"
   });
 
-  const [entries, setEntries] = useState([]);
-  const [entry, setEntry] = useState({
-    id: 0,
+  const [entries, setEntries] = useState<WorkEntry[]>([]);
+  const [entry, setEntry] = useState<WorkEntry>({
+    id: '0',
     day: '',
+    date: '',
     start: '16:00',
     end: '19:30',
     overtime: '',
-    minutes: '',
+    minutes: 0,
   });
 
-  const [editingId, setEditingId] = useState(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
 
-  const handleEditClick = (selectedEntry) => {
+  const handleEditClick = (selectedEntry: WorkEntry) => {
     setEditingId(selectedEntry.id);
 
     const dayNumber = selectedEntry.date.split('-')[2];
 
     setEntry({
       id: selectedEntry.id,
+      date: selectedEntry.date,
       day: dayNumber,
       start: selectedEntry.start,
       end: selectedEntry.end,
@@ -51,7 +52,15 @@ const App = () => {
 
   const cancelEdit = () => {
     setEditingId(null);
-    setEntry({ id: 0, day: '', start: '16:00', end: '19:30', overtime: '' });
+    setEntry({
+      id: '0',
+      date: '',
+      minutes: 0,
+      day: '',
+      start: '16:00',
+      end: '19:30',
+      overtime: '',
+    });
   };
 
   const periodData = useMemo(() => {
@@ -64,7 +73,7 @@ const App = () => {
         const entryDate = new Date(i.date);
         return entryDate >= start && entryDate < end;
       })
-      .sort((a, b) => new Date(a.date) - new Date(b.date));
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
   }, [entries, formData.period]);
 
   const totalTime = useMemo(() => {
@@ -85,7 +94,7 @@ const App = () => {
           ]);
 
           if (profileSnap.exists()) {
-            const profileData = profileSnap.data();
+            const profileData = profileSnap.data() as any;
             setFormData((prev) => ({
               ...prev,
               company: profileData.company,
@@ -94,7 +103,7 @@ const App = () => {
             }));
           }
 
-          setEntries(entriesData);
+          setEntries(entriesData as WorkEntry[]);
         } catch (error) {
           console.error('Data fetch failed', error);
         } finally {
@@ -114,11 +123,13 @@ const App = () => {
     return () => unsubscribe();
   }, []);
 
-  const handleUpdate = (field, value) => {
+  const handleUpdate = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleChange = (e) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     const { name, value } = e.target;
 
     setEntry((prev) => ({
@@ -127,7 +138,7 @@ const App = () => {
     }));
   };
 
-  const handlePostSuccess = (newEntry) => {
+  const handlePostSuccess = (newEntry: WorkEntry) => {
     setEntries((prev) => {
       const isExisting = prev.some((e) => e.id === newEntry.id);
       if (isExisting) {
@@ -139,7 +150,7 @@ const App = () => {
     cancelEdit();
   };
 
-  const handleDeleteSuccess = (id) => {
+  const handleDeleteSuccess = (id: string) => {
     setEntries((prev) => prev.filter((entry) => entry.id != id));
   };
   if (loading) {
@@ -201,7 +212,7 @@ const App = () => {
             <OverView totalTime={totalTime} entries={periodData} />
             <Logs
               onEdit={handleEditClick}
-              period={formData}
+              formData={formData}
               totalTime={totalTime}
               entries={periodData}
               onDelete={handleDeleteSuccess}

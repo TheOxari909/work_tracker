@@ -1,6 +1,17 @@
-import { React, useState } from 'react';
-import * as Helper from '@/utils/helpers';
+import React from 'react';
 import * as Db from '@/utils/db';
+import { type WorkEntry, type FormData } from '@/types/types';
+
+interface NewLogProps {
+  onSaveSuccess: (newEntry: WorkEntry) => void;
+  formData: FormData;
+  entry: WorkEntry;
+  handleChange: (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => void;
+  cancelEdit: () => void;
+  editingId: string | null;
+}
 
 const NewLog = ({
   onSaveSuccess,
@@ -9,25 +20,24 @@ const NewLog = ({
   handleChange,
   cancelEdit,
   editingId,
-}) => {
+}: NewLogProps) => {
   const [year, month] = formData.period.split('-').map(Number);
   const daysInMonth = new Date(year, month, 0).getDate();
-  const [day, setDay] = useState('');
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!entry.day || !formData.period || !entry.start || !entry.end) return;
 
     try {
-      let savedEntry;
+      let savedEntry: WorkEntry | undefined;
       if (editingId) {
         savedEntry = await Db.updateEntry(entry, formData.period);
       } else {
         savedEntry = await Db.saveEntry(entry, formData.period);
       }
-      onSaveSuccess(savedEntry);
+      if (savedEntry) onSaveSuccess(savedEntry);
     } catch (error) {
-      console.error(error.message);
+      console.error((error as Error).message);
     }
   };
 
