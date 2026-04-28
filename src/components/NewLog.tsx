@@ -28,6 +28,11 @@ const NewLog = ({
     e.preventDefault();
     if (!entry.day || !formData.period || !entry.start || !entry.end) return;
 
+    const tempId = editingId || `temp-${Date.now()}`;
+    const optimisticEntry = { ...entry, id: tempId };
+
+    onSaveSuccess(optimisticEntry);
+
     try {
       let savedEntry: WorkEntry | undefined;
       if (editingId) {
@@ -37,7 +42,9 @@ const NewLog = ({
       }
       if (savedEntry) onSaveSuccess(savedEntry);
     } catch (error) {
+      setEntries(backupEntries);
       console.error((error as Error).message);
+      alert('Save failed - reverted to previous state.');
     }
   };
 

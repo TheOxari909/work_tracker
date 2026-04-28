@@ -50,7 +50,6 @@ interface LogItemProps {
 
 const LogItem = ({ entry, onDelete, onEdit }: LogItemProps) => {
   const handleDelete = async (id: string) => {
-    if (event) event.preventDefault();
     try {
       Db.handleDelete(id);
       onDelete(id);
@@ -77,17 +76,32 @@ const LogItem = ({ entry, onDelete, onEdit }: LogItemProps) => {
       <div className="col-span-3 font-bold text-blue-600 tabular-nums">
         {Helper.formatHours(entry.minutes)}
       </div>
-      <div className="col-span-2 flex space-x-4 lg:justify-end mt-2 lg:mt-0">
+      <div className="col-span-2 flex items-center space-x-4 lg:justify-end mt-2 lg:mt-0">
+        {entry.overtime && (
+          <div className="relative flex items-center group cursor-help">
+            <div className="flex h-6 w-6 items-center justify-center rounded-full bg-amber-500 text-white font-black text-sm animate-pulse">
+              !
+            </div>
+            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:flex flex-col items-center">
+              <div className="relative z-10 w-48 p-2 text-center text-xs text-white bg-gray-900 shadow-xl rounded-md">
+                {entry.overtime}
+              </div>
+              <div className="w-2 h-2 -mt-1 rotate-45 bg-gray-900"></div>
+            </div>
+          </div>
+        )}
+
         <button
           onClick={() => onEdit(entry)}
-          className="text-xs font-bold text-slate-400 hover:text-blue-600 bg-slate-100 px-3 py-1 rounded"
+          className="text-xs font-bold text-slate-400 hover:text-blue-600 bg-slate-100 px-3 py-1 rounded transition-colors"
         >
           EDIT
         </button>
+
         <button
           type="button"
           onClick={() => handleDelete(entry.id)}
-          className="text-xs font-bold text-slate-400 hover:text-red-600 bg-slate-100 px-3 py-1 rounded"
+          className="text-xs font-bold text-slate-400 hover:text-red-600 bg-slate-100 px-3 py-1 rounded transition-colors"
         >
           X
         </button>
