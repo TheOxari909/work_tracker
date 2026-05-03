@@ -1,22 +1,10 @@
-import { useState, useEffect, useMemo } from 'react';
-import { db, auth } from '@/firebase';
-import { getDoc, doc } from 'firebase/firestore';
-import * as Db from '@/utils/db';
-import { type WorkEntry } from '@/types/types';
+import { useState, useMemo } from 'react';
+import { useAuth } from '@/context/AuthContext';
+import { type WorkEntry, type FormData } from '@/types/types';
 
 export const useWorkManager = () => {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [entries, setEntries] = useState<WorkEntry[]>([]);
+  const { entries, formData, setFormData, setEntries } = useAuth();
   const [editingId, setEditingId] = useState<string | null>(null);
-
-  const [formData, setFormData] = useState({
-    workerName: '',
-    location: '',
-    company: '',
-    period: new Date().toISOString().slice(0, 7), // Default to "2026-04"
-  });
-
   const [entry, setEntry] = useState<WorkEntry>({
     id: '0',
     day: '',
@@ -26,45 +14,6 @@ export const useWorkManager = () => {
     overtime: '',
     minutes: 0,
   });
-
-  useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged(async (user) => {
-      if (user) {
-        setIsLoggedIn(true);
-        try {
-          const [profileSnap, entriesData] = await Promise.all([
-            getDoc(doc(db, 'users', user.uid)),
-            Db.fetchEntries(),
-          ]);
-
-          if (profileSnap.exists()) {
-            const profileData = profileSnap.data() as any;
-            setFormData((prev) => ({
-              ...prev,
-              company: profileData.company,
-              workerName: profileData.name,
-              location: profileData.location,
-            }));
-          }
-
-          setEntries(entriesData as WorkEntry[]);
-        } catch (error) {
-          console.error('Data fetch failed', error);
-        } finally {
-          setLoading(false);
-        }
-      } else {
-        const timer = setTimeout(() => {
-          setIsLoggedIn(false);
-          setLoading(false);
-        }, 3000);
-
-        return () => clearTimeout(timer);
-      }
-    });
-
-    return () => unsubscribe();
-  }, []);
 
   const periodData = useMemo(() => {
     const [year, month] = formData.period.split('-').map(Number);
@@ -116,7 +65,7 @@ export const useWorkManager = () => {
   };
 
   const handleUpdate = (field: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
+    setFormData((prev: FormData) => ({ ...prev, [field]: value }));
   };
 
   const handleChange = (
@@ -156,13 +105,10 @@ export const useWorkManager = () => {
     handleChange,
     handleUpdate,
     cancelEdit,
-    formData,
-    loading,
-    entries,
     editingId,
-    isLoggedIn,
     entry,
     periodData,
     totalTime,
+    formData,
   };
 };

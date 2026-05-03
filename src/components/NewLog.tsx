@@ -42,7 +42,6 @@ const NewLog = ({
       }
       if (savedEntry) onSaveSuccess(savedEntry);
     } catch (error) {
-      setEntries(backupEntries);
       console.error((error as Error).message);
       alert('Save failed - reverted to previous state.');
     }
